@@ -1,0 +1,37 @@
+group 'com.june.fffmpeg'
+version '1.0'
+
+buildscript {
+    repositories {
+        google()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.5.0'
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        jcenter()
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 28
+
+    defaultConfig {
+        minSdkVersion 24
+    }
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+}
+dependencies {
+    compile group: 'com.arthenica', name: 'mobile-ffmpeg-min', version: '4.3.2'
+//    implementation 'com.arthenica:mobile-ffmpeg-' + safePackageName(safeExtGet('flutterFFmpegPackage', 'https')) + ':' + safePackageVersion(safeExtGet('flutterFFmpegPackage', 'https'), '4.3.1', '4.3.1')
+}
