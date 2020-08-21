@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 
@@ -10,10 +11,34 @@ class Fffmpeg {
     final String version = await _channel.invokeMethod('getPlatformVersion');
     return version;
   }
+  //android 传命令 ios传路径
   static Future<String>  exeCommand(String command) async {
-    final String version = await _channel.invokeMethod('exeCommand',{'arguments': parseArguments(command)});
+    String version="";
+    if(Platform.isIOS){
+      var split = command.split(",");
+
+      version = await _channel.invokeMethod('exeCommand',{'arguments': {"inputPath":split[0],"outputPath":split[1]}});
+    }else if(Platform.isAndroid){
+        version = await _channel.invokeMethod('exeCommand',{'arguments': parseArguments(command)});
+    }
+
     return version;
   }
+
+  static Future<String> executeWithArguments(List<String> arguments) async {
+    if(Platform.isIOS){
+      return "Platform.isIOS!!error";
+    }
+    try {
+      String version = await _channel
+          .invokeMethod('exeCommand', {'arguments': arguments});
+      return version;
+    } on PlatformException catch (e) {
+      print("Plugin error: ${e.message}");
+      return "error";
+    }
+  }
+
   static List<String> parseArguments(String command) {
     List<String> argumentList = new List();
     StringBuffer currentArgument = new StringBuffer();
