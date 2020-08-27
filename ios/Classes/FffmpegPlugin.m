@@ -150,7 +150,7 @@
     //图片
     CALayer*picLayer = [CALayer layer];
     picLayer.contents = (id)[UIImage imageNamed:@"watermarklogo"].CGImage;
-    picLayer.frame = CGRectMake(0, size.height-120, 400, 100);
+    picLayer.frame = CGRectMake(20, size.height-120, 100, 102);
     
     // 2 - The usual overlay
     CALayer *overlayLayer = [CALayer layer];
