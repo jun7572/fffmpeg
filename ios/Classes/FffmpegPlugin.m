@@ -18,26 +18,30 @@
        NSDictionary* arguments = call.arguments[@"arguments"];
        NSString *input=arguments[@"inputPath"];
        NSString *output=arguments[@"outputPath"];
-       NSLog(@"=======input=======",input);
-        NSLog(@"========output======",output);
-       [self addWaterPicWithVideoPath:input outPath:output result:result];
-//      int rc = [MobileFFmpeg executeWithArguments:arguments];
-//
-//                  NSLog(@"FFmpeg exited with rc: %d\n", rc);
-//
-               
-      
-    
+       NSLog(input);
+        NSLog(output);
+       //test
+//       [self addWaterPicWithVideoPath1:input outPath:output result:result];
 
-      
-  } else {
+   } else if([@"addwaterMark" isEqualToString:call.method]){
+        NSDictionary* arguments = call.arguments[@"arguments"];
+         NSString *input=arguments[@"inputPath"];
+         NSString *output=arguments[@"outputPath"];
+            NSLog(input);
+            NSLog(output);
+           NSString *watermarkPath=arguments[@"watermarkPath"];
+       //LeftTop  RightTop  RightBottom  LeftBottom
+           NSString *position=arguments[@"position"];
+       [self addWaterPicWithVideoPath:input outPath:output result:result watermarkPath:watermarkPath position:position];
+       
+   }else {
     result(FlutterMethodNotImplemented);
   }
 }
 
 
 
-- (void)addWaterPicWithVideoPath:(NSString*)path outPath:(NSString*)outPath result:(FlutterResult)result
+- (void)addWaterPicWithVideoPath:(NSString*)path outPath:(NSString*)outPath result:(FlutterResult)result watermarkPath:(NSString*)watermarkPath position:(NSString*)position
 {
     //1 创建AVAsset实例
     AVURLAsset* videoAsset = [AVURLAsset assetWithURL:[NSURL fileURLWithPath:path]];
@@ -95,7 +99,7 @@
     mainCompositionInst.renderSize = CGSizeMake(renderWidth, renderHeight);
     mainCompositionInst.instructions = [NSArray arrayWithObject:mainInstruction];
     mainCompositionInst.frameDuration = CMTimeMake(1, 30);
-    [self applyVideoEffectsToComposition:mainCompositionInst size:naturalSize];
+    [self applyVideoEffectsToComposition:mainCompositionInst size:naturalSize watermarkPath:watermarkPath position:position];
 
     //    // 4 - 输出路径
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
@@ -116,13 +120,18 @@
         dispatch_async(dispatch_get_main_queue(), ^{
 
             if( exporter.status == AVAssetExportSessionStatusCompleted ){
-
+ NSLog(@"ios-addmark-ok");
                 UISaveVideoAtPathToSavedPhotosAlbum(myPathDocs, nil, nil, nil);
+                
                         result(outPath);
+               
             }else if( exporter.status == AVAssetExportSessionStatusFailed )
             {
+                NSLog(@"not-ok");
+                NSLog(exporter.error.localizedDescription);
                    result(@"notok");
-                NSLog(@"failed");
+                
+               
             }
 
         });
@@ -136,7 +145,7 @@
  @param composition 视频的结构
  @param size 视频的尺寸
  */
-- (void)applyVideoEffectsToComposition:(AVMutableVideoComposition *)composition size:(CGSize)size
+- (void)applyVideoEffectsToComposition:(AVMutableVideoComposition *)composition size:(CGSize)size watermarkPath:(NSString*)watermarkPath position:(NSString*)position
 {
     // 文字
 //    CATextLayer *subtitle1Text = [[CATextLayer alloc] init];
@@ -146,11 +155,35 @@
 //    [subtitle1Text setString:@"ZHIMABAOBAO"];
 //    //    [subtitle1Text setAlignmentMode:kCAAlignmentCenter];
 //    [subtitle1Text setForegroundColor:[[UIColor whiteColor] CGColor]];
-
-    //图片
+    
+    NSData *imageData = [NSData dataWithContentsOfFile:watermarkPath];
+      UIImage *image2 = [UIImage imageWithData:imageData];
+//    //图片
     CALayer*picLayer = [CALayer layer];
-    picLayer.contents = (id)[UIImage imageNamed:@"watermarklogo"].CGImage;
-    picLayer.frame = CGRectMake(20, size.height-120, 100, 102);
+////    UIImage *ui11=[UIImage imageNamed:@"watermarklogo"];
+//
+    picLayer.contents = (id)image2.CGImage;
+     
+    
+//    CALayer*picLayer = [CALayer layer];
+//    picLayer.contents = (id)[UIImage imageNamed:@"watermarklogo"].CGImage;
+//    picLayer.frame = CGRectMake(20, size.height-120, 100, 102);
+
+     picLayer.contents = (id)image2.CGImage;
+     NSUInteger width= image2.size.width;
+     NSUInteger height= image2.size.height;
+    //看到时候传不传进来
+    NSInteger logoPadding=20;
+    //LeftTop  RightTop  RightBottom  LeftBottom
+    if([@"LeftTop" isEqualToString:position]){
+        picLayer.frame = CGRectMake(logoPadding, size.height-height-logoPadding, width, height);
+    }else if([@"RightTop" isEqualToString:position]){
+        picLayer.frame = CGRectMake(size.width-width-logoPadding, size.height-height-logoPadding, width, height);
+    }else if([@"RightBottom" isEqualToString:position]){
+picLayer.frame = CGRectMake(size.width-width-logoPadding, logoPadding, width, height);
+    }else if([@"LeftBottom" isEqualToString:position]){
+ picLayer.frame = CGRectMake(logoPadding, logoPadding, width, height);
+    }
     
     // 2 - The usual overlay
     CALayer *overlayLayer = [CALayer layer];
@@ -169,6 +202,10 @@
                                  videoCompositionCoreAnimationToolWithPostProcessingAsVideoLayer:videoLayer inLayer:parentLayer];
  
 }
+
+
+
+
 
 
 @end
