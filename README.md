@@ -1,6 +1,6 @@
 # fffmpeg
 
-A new Flutter plugin.
+自己用的不爽就会维护,代码没整理,诸位看着用
 
 ## Getting Started
 
